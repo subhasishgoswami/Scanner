@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button, TouchableOpacity, Pressable } from 'react-native';
+import { Text, View, StyleSheet, Button, StatusBar } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
+import * as Clipboard from 'expo-clipboard';
 
 export default function App() {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [text, setText] = useState('Please Scan')
+  const [copiedText, setCopiedText] = useState('');
+
+  const copyToClipboard = async (data) => {
+    await Clipboard.setStringAsync(data);
+    setCopiedText(data);
+  };
 
   const askForCameraPermission = () => {
     (async () => {
@@ -20,8 +27,9 @@ export default function App() {
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
-    setText(data)
-    console.log('Type: ' + type + '\nData: ' + data)
+    setText(data);
+    copyToClipboard(data);
+    // console.log('Type: ' + type + '\nData: ' + data)
   };
 
   if (hasPermission === null) {
@@ -39,26 +47,30 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.barcodebox}>
-        <BarCodeScanner
-          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={{ height: 400, width: 400 }} />
-      </View>
-      
-      <View style={styles.result}>
-        <Text selectable={true} style={styles.maintext}>{text}</Text>
-      </View>
+    <>
+      <View style={styles.container}>
+        <View style={styles.barcodebox}>
+          <BarCodeScanner
+            onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+            style={{ height: 800, width: 800 }} />
+        </View>
+        
+        <View style={styles.result}>
+          {copiedText &&(
+            <Text onPress={() => copyToClipboard(text)} style={styles.maintext}>{text}</Text>
+          )}
+        </View>
 
-      {scanned && <Button title={'Scan again'} onPress={() => setScanned(false)} color='#146eb4' />}
-    </View>
+        {scanned && (<Button title={'Scan again'} onPress={() => setScanned(false)} color='#146eb4' style/>)}
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#B4B4B3',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -69,7 +81,7 @@ const styles = StyleSheet.create({
   barcodebox: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 300,
+    height: 350,
     width: 300,
     overflow: 'hidden',
     borderRadius: 10,
@@ -83,5 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     elevation: 5, 
     borderRadius: 10,
+    width:'75%',
+    alignItems:'center'
   }
 });
